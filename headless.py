@@ -26,24 +26,28 @@ cursor = cnx.cursor()
 # Connect to database
 connect_to_database(cursor)
 
-#`cursor.execute("INSERT IGNORE INTO testing VALUES('testval')")
-
 while True:
 
     table_list = get_tables(cursor)
-    input1 = input("Enter your command:\n").lower().strip()
+    input1 = input("Enter your command:\nYou may type 'help' for commands or 'exit' to save and exit the program.\n").lower().strip()
+
+    command_list = ['create table', 'show tables', 'delete table', 'create entry', 'show entries', 'delete entry', 'exit']
+    if input1 == 'help':
+        print("You may use the following commands: ")
+        for command in command_list:
+            print(command)
 
     #-----Create, Show, Delete tables
     if input1 == 'create table':
         table_name = input("Enter a name for your table")
         create_table(cursor, table_name.lower().strip().replace(' ', '_'))
 
-    if input1 == 'show tables':
+    elif input1 == 'show tables':
         print("\nYour tables are as follows: \n")
         show_tables(cursor)
         print('')
         
-    if input1 == 'delete table':
+    elif input1 == 'delete table':
         try:
             delete_table = input("Enter table to be deleted\n")
             if delete_table.lower().strip().replace(' ', '_') in table_list:
@@ -52,7 +56,7 @@ while True:
         except:
             print('table not found')
     #-----Create, Show, Delete entries in table
-    if input1 == 'create entry':
+    elif input1 == 'create entry':
         enter_table = input("Which table to enter: ").lower().strip().replace(' ', '_')
         fields_array = []
 
@@ -64,8 +68,16 @@ while True:
         
         field_values = []
         for field in fields_array:
-            values = input(f"Enter value for {field}")
-            field_values.append(f"'{values}'")
+            if field == 'item':
+                value = input(f"Enter item name: ")
+                field_values.append(f"'{value}'")
+            if field == 'price':
+                value = input(f"Enter product price: ")
+                field_values.append(f"'{value}'")
+            if field == 'amount':
+                value = input(f"Enter quantity to be purchased: ")
+                field_values.append(f"'{value}'")
+        
         
         fields_data = ','.join(field_values)
 
@@ -73,28 +85,34 @@ while True:
         print(exec_string)
         cursor.execute(exec_string)
 
-    if input1 == 'show table':
-        table_name = input("Enter desired table")
-        cursor.execute(f"SELECT * FROM {table_name};")
-        f = cursor.fetchall()
-        for item in f:
-            print('\n')
-            print("Item = ", item[0])
-            print("Price = ", item[1])
-            print("Quantity = ", item[2])
+    # Put this into its own function
+    elif input1 == 'show entries':
+        table_name = input("Enter desired table\n")
+        try: 
+            cursor.execute(f"SELECT * FROM {table_name};")
+            f = cursor.fetchall()
+            for item in f:
+                print('\n')
+                print("Item = ", item[0])
+                print("Price = ", item[1])
+                print("Quantity = ", item[2])
+        except:
+            print("Table not found")
 
-    if input1 == 'delete entry':
-        table_name = input("Name of table to delete: ")
-        delete_entry = input("name of entry to delete: ")
-        print(table_name, delete_entry)
-        cursor.execute(f"DELETE FROM {table_name} WHERE item = '{delete_entry}';")
+    elif input1 == 'delete entry':
+        try:
+            table_name = input("Name of table to delete: ")
+            delete_entry = input("name of entry to delete: ")
+            print(table_name, delete_entry)
+            cursor.execute(f"DELETE FROM {table_name} WHERE item = '{delete_entry}';")
+        except:
+            print("failed to delete entry")
 
-
-
-    if input1 == 'exit':
+    elif input1 == 'exit':
         cnx.commit()
         cnx.close()
         cursor.close()
         break
+
         
 
